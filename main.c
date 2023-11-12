@@ -9,9 +9,17 @@
 #include "include/raylib.h"
 #include "realfft.h"
 
+#define SCREEN_HEIGHT 512
+#define SCREEN_WIDTH 512
+
 #define TWO_PI 6.28318530717959
 #define N (1<<11)
 #define TARGET_FREQ_SIZE 9
+
+#define BG_COLOR (Color) {237, 244, 242, 255}
+#define TEXT_COLOR (Color) {115, 93, 51, 255}
+#define SPECTRUM_COLOR (Color) {124, 131, 99, 255}
+#define PROGRESS_BAR_COLOR (Color) {49, 71, 58, 255}
 
 typedef struct
 {
@@ -122,12 +130,17 @@ void RMS_TO_DBFS(float spectrum[], float n_freq[], float dt, float smoothingFact
 
 void visualizeSpectrum()
 {
-    float h = GetRenderHeight() / 2;
+    float h = SCREEN_HEIGHT / 2;
     for (size_t i = 0; i < TARGET_FREQ_SIZE-1; i++)
     {
         /* code */
-        DrawRectangleLines(128.0 + (i * 32), h - (3.0*data.smooth_spectrum[i]), 30, (3.0*data.smooth_spectrum[i]), BLACK);
+        DrawRectangleLines(128.0 + (i * 32), h - (3.0*data.smooth_spectrum[i]), 30, (3.0*data.smooth_spectrum[i]), SPECTRUM_COLOR);
     }  
+}
+
+void displayProgressBar(int time_played)
+{
+    DrawRectangle(128, (SCREEN_HEIGHT / 2) + 32 - 12, (int)time_played, 12, PROGRESS_BAR_COLOR); 
 }
 
 void cleanUp()
@@ -142,13 +155,10 @@ void cleanUp()
 int main(void)
 {
     // Initialization
-    //--------------------------------------------------------------------------------------
-    const int screenWidth  = 512;
-    const int screenHeight = 512;
 
-    InitWindow(screenWidth, screenHeight, "Mckenzie - FFT AUDIO VISUALIZER");
+    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Mckenzie - FFT AUDIO VISUALIZER");
     InitAudioDevice();              // Initialize audio device
-    Music music = LoadMusicStream("resources/Sea of problems.mp3");
+    Music music = LoadMusicStream("resources/KIRA-vynth.mp3");
     AttachAudioStreamProcessor(music.stream, ProcessAudioStream);
     PlayMusicStream(music);
     music.looping = false;
@@ -157,7 +167,11 @@ int main(void)
     float target_frequencies[TARGET_FREQ_SIZE] = {20.0, 60.0, 250.0, 500.0, 2000.0, 4000.0, 6000.0, 16000.0, 22050.0};
     float smoothingFactor  = 20.0;
     unsigned int fs = music.stream.sampleRate;
+
     //--------------------------------------------------------------------------------------
+    float durations = GetMusicTimeLength(music);
+    float time_played = 0.0f;
+    char *music_title = "KIRA - Vynth";
 
     SetTargetFPS(60);               // Set to render at 60 frames-per-second
 
@@ -166,7 +180,6 @@ int main(void)
     {
         // Get Framerate in seconds.
         float dt = GetFrameTime();
-        printf("%f\n", dt);
 
         // Update
         //----------------------------------------------------------------------------------
@@ -188,7 +201,7 @@ int main(void)
         //----------------------------------------------------------------------------------
         if (!IsMusicStreamPlaying(music)) {
             cleanUp();
-            break;
+            CloseWindow();
         }
         //----------------------------------------------------------------------------------
         float spectrum[TARGET_FREQ_SIZE-1] = {0.0};
@@ -197,13 +210,18 @@ int main(void)
         performPersevalTheorem(spectrum, n_freq, target_frequencies, fs);
         
         RMS_TO_DBFS(spectrum, n_freq, dt, smoothingFactor);
-        
+
+        //----------------------------------------------------------------------------------
+        time_played = GetMusicTimePlayed(music)/durations*(SCREEN_WIDTH - 256);
+
         //----------------------------------------------------------------------------------
         // Draw
         //----------------------------------------------------------------------------------
         BeginDrawing();
-            ClearBackground(RAYWHITE);
-            visualizeSpectrum();       
+            ClearBackground(BG_COLOR);
+            visualizeSpectrum();
+            displayProgressBar((int)time_played);
+            DrawText(music_title, 128, (SCREEN_HEIGHT/2) + 64 - 20, 20, TEXT_COLOR);    
         EndDrawing();
         
         //----------------------------------------------------------------------------------
