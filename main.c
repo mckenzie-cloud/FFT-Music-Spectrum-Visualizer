@@ -14,7 +14,7 @@
 
 #define TWO_PI 6.28318530717959
 #define N (1<<11)
-#define TARGET_FREQ_SIZE 9
+#define TARGET_FREQ_SIZE 10
 
 #define BG_COLOR (Color) {237, 244, 242, 255}
 #define TEXT_COLOR (Color) {115, 93, 51, 255}
@@ -134,13 +134,13 @@ void visualizeSpectrum()
     for (size_t i = 0; i < TARGET_FREQ_SIZE-1; i++)
     {
         /* code */
-        DrawRectangleLines(128.0 + (i * 32), h - (3.0*data.smooth_spectrum[i]), 30, (3.0*data.smooth_spectrum[i]), SPECTRUM_COLOR);
+        DrawRectangleLines(112.0 + (i * 32), h - (3.0*data.smooth_spectrum[i]), 30, (3.0*data.smooth_spectrum[i]), SPECTRUM_COLOR);
     }  
 }
 
 void displayProgressBar(int time_played)
 {
-    DrawRectangle(128, (SCREEN_HEIGHT / 2) + 32 - 12, (int)time_played, 12, PROGRESS_BAR_COLOR); 
+    DrawRectangle(112, (SCREEN_HEIGHT / 2) + 32 - 12, (int)time_played, 12, PROGRESS_BAR_COLOR); 
 }
 
 void cleanUp()
@@ -164,7 +164,7 @@ int main(void)
     music.looping = false;
 
     //--------------------------------------------------------------------------------------
-    float target_frequencies[TARGET_FREQ_SIZE] = {20.0, 60.0, 250.0, 500.0, 2000.0, 4000.0, 6000.0, 16000.0, 22050.0};
+    float target_frequencies[TARGET_FREQ_SIZE] = {20.0, 40.0, 80.0, 160.0, 300.0, 600.0, 1200.0, 5000.0, 10000.0, 22050.0};
     float smoothingFactor  = 20.0;
     unsigned int fs = music.stream.sampleRate;
 
@@ -212,7 +212,7 @@ int main(void)
         RMS_TO_DBFS(spectrum, n_freq, dt, smoothingFactor);
 
         //----------------------------------------------------------------------------------
-        time_played = GetMusicTimePlayed(music)/durations*(SCREEN_WIDTH - 256);
+        time_played = GetMusicTimePlayed(music)/durations*(SCREEN_WIDTH - 224);
 
         //----------------------------------------------------------------------------------
         // Draw
@@ -221,7 +221,7 @@ int main(void)
             ClearBackground(BG_COLOR);
             visualizeSpectrum();
             displayProgressBar((int)time_played);
-            DrawText(music_title, 128, (SCREEN_HEIGHT/2) + 64 - 20, 20, TEXT_COLOR);    
+            DrawText(music_title, 112, (SCREEN_HEIGHT/2) + 64 - 20, 20, TEXT_COLOR);    
         EndDrawing();
         
         //----------------------------------------------------------------------------------
