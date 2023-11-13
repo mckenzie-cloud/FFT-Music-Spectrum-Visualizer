@@ -72,11 +72,9 @@ void performFFT()
     realft(data.output_raw_Data, N, 1);
 }
 
-float getAmp(float a, float b)
+float getMag(float a, float b)
 {
-    // float mag = sqrtf(a*a + b*b);
-    // return powf(mag, 2.0);
-    return fabsf(a*a + b*b);
+    return sqrtf(a*a + b*b);
 }
 
 void calculateAmplitudes()
@@ -84,8 +82,8 @@ void calculateAmplitudes()
     for (size_t c = 0; c < (N/2); c++)
     {
         /* code */
-        float amp = getAmp(data.output_raw_Data[2*c], data.output_raw_Data[2*c+1]);      // even indexes are real values and odd indexes are complex value.
-        data.frequency_magnitude[c] = amp;
+        float mag = getMag(data.output_raw_Data[2*c], data.output_raw_Data[2*c+1]);      // even indexes are real values and odd indexes are complex value.
+        data.frequency_magnitude[c] = mag;
     }  
 }
 
@@ -128,13 +126,13 @@ void RMS_TO_DBFS(float spectrum[], float n_freq[], float dt, float smoothingFact
     }
 }
 
-void visualizeSpectrum()
+void visualizeSpectrum(float spectrum_scaling_factor)
 {
     float h = SCREEN_HEIGHT / 2;
     for (size_t i = 0; i < TARGET_FREQ_SIZE-1; i++)
     {
         /* code */
-        DrawRectangleLines(112.0 + (i * 32), h - (3.0*data.smooth_spectrum[i]), 30, (3.0*data.smooth_spectrum[i]), SPECTRUM_COLOR);
+        DrawRectangleLines(112.0 + (i * 32), h - (spectrum_scaling_factor*data.smooth_spectrum[i]), 30, (spectrum_scaling_factor*data.smooth_spectrum[i]), SPECTRUM_COLOR);
     }  
 }
 
@@ -166,6 +164,7 @@ int main(void)
     //--------------------------------------------------------------------------------------
     float target_frequencies[TARGET_FREQ_SIZE] = {20.0, 40.0, 80.0, 160.0, 300.0, 600.0, 1200.0, 5000.0, 10000.0, 22050.0};
     float smoothingFactor  = 20.0;
+    float spectrum_scaling_factor = 5.0;
     unsigned int fs = music.stream.sampleRate;
 
     //--------------------------------------------------------------------------------------
@@ -219,7 +218,7 @@ int main(void)
         //----------------------------------------------------------------------------------
         BeginDrawing();
             ClearBackground(BG_COLOR);
-            visualizeSpectrum();
+            visualizeSpectrum(spectrum_scaling_factor);
             displayProgressBar((int)time_played);
             DrawText(music_title, 112, (SCREEN_HEIGHT/2) + 64 - 20, 20, TEXT_COLOR);    
         EndDrawing();
