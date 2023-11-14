@@ -27,7 +27,7 @@ typedef struct
     float input_raw_Data[N];
     float input_data_with_windowing_function[N];
     float output_raw_Data[N];
-    float frequency_magnitude[N/2];
+    float frequency_sqr_mag[N/2];
     float smooth_spectrum[TARGET_FREQ_SIZE-1];
 } Data;
 
@@ -72,9 +72,9 @@ void performFFT()
     realft(data.output_raw_Data, N, 1);
 }
 
-float getMag(float a, float b)
+float getSqrMag(float a, float b)
 {
-    return sqrtf(a*a + b*b);
+    return a*a + b*b;
 }
 
 void calculateAmplitudes()
@@ -82,8 +82,8 @@ void calculateAmplitudes()
     for (size_t c = 0; c < (N/2); c++)
     {
         /* code */
-        float mag = getMag(data.output_raw_Data[2*c], data.output_raw_Data[2*c+1]);      // even indexes are real values and odd indexes are complex value.
-        data.frequency_magnitude[c] = mag;
+        float sqr_mag = getSqrMag(data.output_raw_Data[2*c], data.output_raw_Data[2*c+1]);      // even indexes are real values and odd indexes are complex value.
+        data.frequency_sqr_mag[c] = sqr_mag;
     }  
 }
 
@@ -106,7 +106,7 @@ void performPersevalTheorem(float spectrum[], float n_freq[], float target_frequ
             /* code */
             if (freq >= target_frequencies[j] && freq < target_frequencies[j+1])
             {
-                spectrum[j] = spectrum[j] + data.frequency_magnitude[bin_index];
+                spectrum[j] = spectrum[j] + data.frequency_sqr_mag[bin_index];
                 n_freq[j] = n_freq[j] + 1;
             }
         }
@@ -119,7 +119,7 @@ void RMS_TO_DBFS(float spectrum[], float n_freq[], float dt, float smoothingFact
     {
         /* code */
         float rms = sqrtf(spectrum[i]/n_freq[i]);        // Calculate the RMS value.
-        float dBFS = 20.0*log10f(rms);                   // Convert RMS value to Decibel Full Scale (dBFS) value.
+        float dBFS = 10.0*log10f(rms);                   // Convert RMS value to Decibel Full Scale (dBFS) value.
         if (dBFS < 0.0) { dBFS = 0.0; }
         spectrum[i] = dBFS;
         data.smooth_spectrum[i] += (spectrum[i] - data.smooth_spectrum[i]) * dt * smoothingFactor;    // Smoothing the spectrum output value.
@@ -146,7 +146,7 @@ void cleanUp()
     memset(data.input_raw_Data, 0, N*sizeof(float));
     memset(data.input_data_with_windowing_function, 0, N*sizeof(float));
     memset(data.output_raw_Data, 0, N*sizeof(float));
-    memset(data.frequency_magnitude, 0, (N/2)*sizeof(float));
+    memset(data.frequency_sqr_mag, 0, (N/2)*sizeof(float));
     memset(data.smooth_spectrum, 0, (TARGET_FREQ_SIZE-1)*sizeof(float));
 }
 
