@@ -99,7 +99,7 @@ void performPersevalTheorem(float spectrum[], float n_freq[], float target_frequ
     for (size_t bin_index = 0; bin_index < (N/2); bin_index++)
     {
         /* code */
-        float freq = bin_index * (fs / N);
+        float freq = (bin_index+1) * (fs / N);
         for (size_t j = 0; j < TARGET_FREQ_SIZE-1; j++)
         {
             /* code */
