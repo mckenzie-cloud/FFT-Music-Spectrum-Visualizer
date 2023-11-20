@@ -15,10 +15,10 @@
 #define N (1<<11)
 #define TARGET_FREQ_SIZE 10
 
-#define BG_COLOR (Color) {237, 244, 242, 255}
-#define TEXT_COLOR (Color) {115, 93, 51, 255}
-#define SPECTRUM_COLOR (Color) {124, 131, 99, 255}
-#define PROGRESS_BAR_COLOR (Color) {49, 71, 58, 255}
+#define BG_COLOR (Color) {0, 0, 0, 255}
+#define TEXT_COLOR (Color) {244, 234, 224, 255}
+#define SPECTRUM_COLOR (Color) {250, 246, 240, 255}
+#define PROGRESS_BAR_COLOR (Color) {244, 223, 200, 255}
 
 typedef struct
 {
@@ -134,13 +134,13 @@ void visualizeSpectrum(float spectrum_scaling_factor)
     for (size_t i = 0; i < TARGET_FREQ_SIZE-1; i++)
     {
         /* code */
-        DrawRectangleLines(112.0 + (i * 32), h - (spectrum_scaling_factor*data.smooth_spectrum[i]), 30, (spectrum_scaling_factor*data.smooth_spectrum[i]), SPECTRUM_COLOR);
+        DrawRectangleLines(184.0 + (i * 16), h - (spectrum_scaling_factor*data.smooth_spectrum[i]), 15, (spectrum_scaling_factor*data.smooth_spectrum[i]), SPECTRUM_COLOR);
     }  
 }
 
 void displayProgressBar(int time_played)
 {
-    DrawRectangle(112, (SCREEN_HEIGHT / 2) + 32 - 12, (int)time_played, 12, PROGRESS_BAR_COLOR); 
+    DrawRectangle(32, (SCREEN_HEIGHT / 2) + 32 - 10, (int)time_played, 10, PROGRESS_BAR_COLOR); 
 }
 
 void cleanUp()
@@ -213,7 +213,7 @@ int main(void)
         RMS_TO_DBFS(spectrum, n_freq, dt, smoothingFactor);
 
         //----------------------------------------------------------------------------------
-        time_played = GetMusicTimePlayed(music)/durations*(SCREEN_WIDTH - 224);
+        time_played = GetMusicTimePlayed(music)/durations*(SCREEN_WIDTH - 64);
 
         //----------------------------------------------------------------------------------
         // Draw
