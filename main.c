@@ -1,5 +1,6 @@
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <math.h>
 #include <stdint.h>
 #include <string.h>
@@ -12,7 +13,7 @@
 #define SCREEN_WIDTH 512
 
 #define TWO_PI 6.28318530717959
-#define N (1<<11)
+#define N (1<<12)
 #define TARGET_FREQ_SIZE 10
 
 #define BG_COLOR (Color) {0, 0, 0, 255}
@@ -158,7 +159,15 @@ int main(void)
 
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Mckenzie - FFT AUDIO VISUALIZER");
     InitAudioDevice();              // Initialize audio device
-    Music music = LoadMusicStream("resources/KIRA-vynth.mp3");
+
+    //--------------------------------------------------------------------------------------
+    const char *music_file_path = "resources/funkadelic.mp3";
+    if (!FileExists(music_file_path))
+    {
+        printf("%s Path Does Not Exist!\n", music_file_path);
+        return EXIT_FAILURE;
+    }
+    Music music = LoadMusicStream(music_file_path);
     AttachAudioStreamProcessor(music.stream, ProcessAudioStream);
     PlayMusicStream(music);
     music.looping = false;
@@ -172,7 +181,7 @@ int main(void)
     //--------------------------------------------------------------------------------------
     float durations = GetMusicTimeLength(music);
     float time_played = 0.0f;
-    char *music_title = "KIRA - Vynth";
+    const char *music_title = GetFileNameWithoutExt(music_file_path);
 
     SetTargetFPS(60);               // Set to render at 60 frames-per-second
 
@@ -222,7 +231,7 @@ int main(void)
             ClearBackground(BG_COLOR);
             visualizeSpectrum(spectrum_scaling_factor);
             displayProgressBar((int)time_played);
-            DrawText(music_title, 112, (SCREEN_HEIGHT/2) + 64 - 20, 20, TEXT_COLOR);    
+            DrawText(music_title, 112, (SCREEN_HEIGHT/2) + 64 - 12, 12, TEXT_COLOR);    
         EndDrawing();
         
         //----------------------------------------------------------------------------------
@@ -239,5 +248,5 @@ int main(void)
     CloseWindow();              // Close window and OpenGL context
     //--------------------------------------------------------------------------------------
 
-    return 0;
+    return EXIT_SUCCESS;
 }
