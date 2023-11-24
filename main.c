@@ -161,7 +161,7 @@ int main(void)
     InitAudioDevice();              // Initialize audio device
 
     //--------------------------------------------------------------------------------------
-    const char *music_file_path = "resources/funkadelic.mp3";
+    const char *music_file_path = "resources/I'M LOST.mp3";
     if (!FileExists(music_file_path))
     {
         printf("%s Path Does Not Exist!\n", music_file_path);
@@ -175,7 +175,7 @@ int main(void)
     //--------------------------------------------------------------------------------------
     float target_frequencies[TARGET_FREQ_SIZE] = {20.0, 40.0, 80.0, 160.0, 300.0, 600.0, 1200.0, 5000.0, 10000.0, 22050.0};
     float smoothingFactor  = 20.0;
-    float spectrum_scaling_factor = 5.0;
+    float spectrum_scaling_factor = 3.0;
     unsigned int fs = music.stream.sampleRate;
 
     //--------------------------------------------------------------------------------------
