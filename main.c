@@ -160,7 +160,7 @@ int main(void)
     InitAudioDevice();              // Initialize audio device
 
     //--------------------------------------------------------------------------------------
-    const char *music_file_path;
+    const char *music_file_path = "";
     Music music_stream;
     bool  music_loaded = false;
 
@@ -173,7 +173,7 @@ int main(void)
     float durations   = 0.0;
     float time_played = 0.0f;
     unsigned int fs   = 0;
-    const char *music_title;
+    const char *music_title = "";
 
     SetTargetFPS(60);               // Set to render at 60 frames-per-second
 
