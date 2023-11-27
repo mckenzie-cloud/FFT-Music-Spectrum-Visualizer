@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -39,7 +38,7 @@ void pushSample(float sample)
     data.input_raw_Data[N-1] = sample;                                                   // Adding last average value
 }
 
-void ProcessAudioStream(void *bufferData, unsigned int frames) 
+void ProcessAudioStreamCallback(void *bufferData, unsigned int frames) 
 {
     /**
      * https://cdecl.org/?q=float+%28*fs%29%5B2%5D
@@ -161,27 +160,20 @@ int main(void)
     InitAudioDevice();              // Initialize audio device
 
     //--------------------------------------------------------------------------------------
-    const char *music_file_path = "resources/I'M LOST.mp3";
-    if (!FileExists(music_file_path))
-    {
-        printf("%s Path Does Not Exist!\n", music_file_path);
-        return EXIT_FAILURE;
-    }
-    Music music = LoadMusicStream(music_file_path);
-    AttachAudioStreamProcessor(music.stream, ProcessAudioStream);
-    PlayMusicStream(music);
-    music.looping = false;
+    const char *music_file_path;
+    Music music_stream;
+    bool  music_loaded = false;
 
     //--------------------------------------------------------------------------------------
     float target_frequencies[TARGET_FREQ_SIZE] = {20.0, 40.0, 80.0, 160.0, 300.0, 600.0, 1200.0, 5000.0, 10000.0, 22050.0};
     float smoothingFactor  = 20.0;
     float spectrum_scaling_factor = 3.0;
-    unsigned int fs = music.stream.sampleRate;
 
     //--------------------------------------------------------------------------------------
-    float durations = GetMusicTimeLength(music);
+    float durations   = 0.0;
     float time_played = 0.0f;
-    const char *music_title = GetFileNameWithoutExt(music_file_path);
+    unsigned int fs   = 0;
+    const char *music_title;
 
     SetTargetFPS(60);               // Set to render at 60 frames-per-second
 
@@ -193,10 +185,52 @@ int main(void)
 
         // Update
         //----------------------------------------------------------------------------------
-        UpdateMusicStream(music);   // Update music buffer with new stream data
+        if (music_loaded)
+        {
+            UpdateMusicStream(music_stream);   // Update music buffer with new stream data
+        }
+
+        // Handle drag & drop file.
+        //----------------------------------------------------------------------------------
+        if (IsFileDropped())
+        {
+            FilePathList droppedFiles = LoadDroppedFiles();     // Load dropped filepaths
+            music_file_path = droppedFiles.paths[0];            // We are only interested in a single file.
+            if (IsFileExtension(music_file_path, ".mp3"))       // Check file extension (including point: .png, .wav)
+            {
+                /**
+                 * Before loading a new music file, make sure to unload any existing ones.
+                */
+                if (music_loaded)
+                {
+                    if (IsMusicStreamPlaying(music_stream))         // Check if music is playing
+                    {
+                        StopMusicStream(music_stream);              // Stop music playing
+                    }
+                    UnloadMusicStream(music_stream);                // Unload music stream buffers from RAM
+                    DetachAudioStreamProcessor(music_stream.stream, ProcessAudioStreamCallback);  // Disconnect audio stream processor
+                }
+
+                music_stream = LoadMusicStream(music_file_path);          // Load music stream from file
+
+                if (IsMusicReady(music_stream))                           // Checks if a music stream is ready
+                {
+                    music_loaded = true;
+                    music_title  = GetFileNameWithoutExt(music_file_path);
+                    durations    = GetMusicTimeLength(music_stream);
+                    fs           = music_stream.stream.sampleRate;
+                    //----------------------------------------------------------------------------------
+                    cleanUp();
+                    AttachAudioStreamProcessor(music_stream.stream, ProcessAudioStreamCallback);    // Attach audio stream processor to stream, receives the samples as <float>s
+                    PlayMusicStream(music_stream);                        // Start music playing
+                }
+            }
+
+            UnloadDroppedFiles(droppedFiles);                         // Unload dropped filepaths
+        }
 
         //----------------------------------------------------------------------------------
-        if(IsMusicReady(music))
+        if(IsMusicStreamPlaying(music_stream))
         {
             // Apply the hanning window.
             applyHanningWindow();
@@ -206,32 +240,30 @@ int main(void)
 
             // Calculate amplitudes.
             calculateAmplitudes();     
-                   
-        }
-        //----------------------------------------------------------------------------------
-        if (!IsMusicStreamPlaying(music)) {
-            cleanUp();
-            CloseWindow();
-        }
-        //----------------------------------------------------------------------------------
-        float spectrum[TARGET_FREQ_SIZE-1] = {0.0};
-        float n_freq[TARGET_FREQ_SIZE-1]   = {0.0};
 
-        performPersevalTheorem(spectrum, n_freq, target_frequencies, fs);
-        
-        RMS_TO_DBFS(spectrum, n_freq, dt, smoothingFactor);
+            //----------------------------------------------------------------------------------
+            float spectrum[TARGET_FREQ_SIZE-1] = {0.0};
+            float n_freq[TARGET_FREQ_SIZE-1]   = {0.0};
 
-        //----------------------------------------------------------------------------------
-        time_played = GetMusicTimePlayed(music)/durations*(SCREEN_WIDTH - 64);
+            performPersevalTheorem(spectrum, n_freq, target_frequencies, fs);
+            
+            RMS_TO_DBFS(spectrum, n_freq, dt, smoothingFactor);
+            
+            time_played = GetMusicTimePlayed(music_stream)/durations*(SCREEN_WIDTH - 64);
+        }
 
         //----------------------------------------------------------------------------------
         // Draw
         //----------------------------------------------------------------------------------
         BeginDrawing();
             ClearBackground(BG_COLOR);
-            visualizeSpectrum(spectrum_scaling_factor);
-            displayProgressBar((int)time_played);
-            DrawText(music_title, 112, (SCREEN_HEIGHT/2) + 64 - 12, 12, TEXT_COLOR);    
+            DrawText("Drag and Drop a music file | MP3 FILE ONLY!", 5, 5, 12, TEXT_COLOR);
+            if (IsMusicStreamPlaying(music_stream))
+            {
+                visualizeSpectrum(spectrum_scaling_factor);
+                displayProgressBar((int)time_played);
+                DrawText(music_title, 112, (SCREEN_HEIGHT/2) + 64 - 12, 12, TEXT_COLOR);  
+            } 
         EndDrawing();
         
         //----------------------------------------------------------------------------------
@@ -239,9 +271,11 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-    UnloadMusicStream(music);   // Unload music stream buffers from RAM
-
-    DetachAudioStreamProcessor(music.stream, ProcessAudioStream);  // Disconnect audio stream processor
+    if (music_loaded)
+    {
+        UnloadMusicStream(music_stream);                                      // Unload music stream buffers from RAM
+        DetachAudioStreamProcessor(music_stream.stream, ProcessAudioStreamCallback);  // Disconnect audio stream processor
+    }
 
     CloseAudioDevice();         // Close audio device (music streaming is automatically stopped)
 
