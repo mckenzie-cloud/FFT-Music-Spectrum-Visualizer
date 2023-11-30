@@ -160,6 +160,12 @@ int main(void)
     InitAudioDevice();              // Initialize audio device
 
     //--------------------------------------------------------------------------------------
+    Texture2D spritesheet = LoadTexture("resources/img/spritesheet.png");
+    int number_of_frames = 5, current_frame = 0, frame_counter = 0, frame_speed = 5;
+    Vector2 sprite_pos = {(float) (SCREEN_WIDTH / 2) - 8, (float) SCREEN_HEIGHT - 32};;
+    Rectangle framerec = {0.0f, 0.0f, (float) spritesheet.width/number_of_frames, (float)spritesheet.height};
+
+    //--------------------------------------------------------------------------------------
     const char *music_file_path = "";
     Music music_stream;
     bool  music_loaded = false;
@@ -249,7 +255,18 @@ int main(void)
             
             RMS_TO_DBFS(spectrum, n_freq, dt, smoothingFactor);
             
+            //----------------------------------------------------------------------------------
             time_played = GetMusicTimePlayed(music_stream)/durations*(SCREEN_WIDTH - 64);
+
+            //----------------------------------------------------------------------------------
+            frame_counter++;
+            if (frame_counter >= (60/frame_speed))
+            {
+                frame_counter = 0;
+                current_frame++;
+                if (current_frame > (number_of_frames-1)) { current_frame = 0; }
+                framerec.x = (float) current_frame * (float) spritesheet.width / number_of_frames;
+            }
         }
 
         //----------------------------------------------------------------------------------
@@ -263,7 +280,8 @@ int main(void)
                 visualizeSpectrum(spectrum_scaling_factor);
                 displayProgressBar((int)time_played);
                 DrawText(music_title, 112, (SCREEN_HEIGHT/2) + 64 - 12, 12, TEXT_COLOR);  
-            } 
+            }
+            DrawTextureRec(spritesheet, framerec, sprite_pos, WHITE); 
         EndDrawing();
         
         //----------------------------------------------------------------------------------
