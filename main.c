@@ -160,9 +160,9 @@ int main(void)
     InitAudioDevice();              // Initialize audio device
 
     //--------------------------------------------------------------------------------------
-    Texture2D spritesheet = LoadTexture("resources/img/spritesheet.png");
-    int number_of_frames = 5, current_frame = 0, frame_counter = 0, frame_speed = 5;
-    Vector2 sprite_pos = {(float) (SCREEN_WIDTH / 2) - 8, (float) SCREEN_HEIGHT - 32};;
+    Texture2D spritesheet = LoadTexture("resources/img/headphone.png");
+    int number_of_frames = 4, current_frame = 0, frame_counter = 0, frame_speed = 5;
+    Vector2 sprite_pos = {(float) (SCREEN_WIDTH / 2) - 16, (float) SCREEN_HEIGHT - 32};;
     Rectangle framerec = {0.0f, 0.0f, (float) spritesheet.width/number_of_frames, (float)spritesheet.height};
 
     //--------------------------------------------------------------------------------------
