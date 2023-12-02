@@ -160,11 +160,20 @@ int main(void)
     InitAudioDevice();              // Initialize audio device
 
     //--------------------------------------------------------------------------------------
+    int font_size = 12;
+    
+    // Set Font
+    Font font = LoadFontEx("resources/Fonts/RobotoMono-SemiBold.ttf", font_size, NULL, 0);
+
+    //--------------------------------------------------------------------------------------
     Texture2D spritesheet = LoadTexture("resources/img/headphone.png");
     int number_of_frames = 4, current_frame = 0, frame_counter = 0, frame_speed = 5;
-    Vector2 sprite_pos = {(float) (SCREEN_WIDTH / 2) - 16, (float) SCREEN_HEIGHT - 32};;
+    Vector2 sprite_pos = {(float) (SCREEN_WIDTH / 2) - 16, (float) SCREEN_HEIGHT - 32};
     Rectangle framerec = {0.0f, 0.0f, (float) spritesheet.width/number_of_frames, (float)spritesheet.height};
 
+    //--------------------------------------------------------------------------------------
+    const char *instruction_text = "Drag and Drop a music file | MP3 FILE ONLY!";
+    Vector2 instruction_text_pos = {5.0, 5.0};
     //--------------------------------------------------------------------------------------
     const char *music_file_path = "";
     Music music_stream;
@@ -180,6 +189,8 @@ int main(void)
     float time_played = 0.0f;
     unsigned int fs   = 0;
     const char *music_title = "";
+    unsigned int text_width = 0;
+    Vector2 text_pos = {0.0, (float) (SCREEN_HEIGHT / 2) + 64};
 
     SetTargetFPS(60);               // Set to render at 60 frames-per-second
 
@@ -225,6 +236,8 @@ int main(void)
                     music_title  = GetFileNameWithoutExt(music_file_path);
                     durations    = GetMusicTimeLength(music_stream);
                     fs           = music_stream.stream.sampleRate;
+                    text_width   = (int) MeasureTextEx(font, music_title, (float) font_size, 0.0).x;
+                    text_pos.x   = (SCREEN_WIDTH - text_width) / 2;
                     //----------------------------------------------------------------------------------
                     cleanUp();
                     AttachAudioStreamProcessor(music_stream.stream, ProcessAudioStreamCallback);    // Attach audio stream processor to stream, receives the samples as <float>s
@@ -274,12 +287,14 @@ int main(void)
         //----------------------------------------------------------------------------------
         BeginDrawing();
             ClearBackground(BG_COLOR);
-            DrawText("Drag and Drop a music file | MP3 FILE ONLY!", 5, 5, 12, TEXT_COLOR);
+            DrawText(instruction_text, instruction_text_pos.x, instruction_text_pos.y, 10, TEXT_COLOR);
             if (IsMusicStreamPlaying(music_stream))
             {
                 visualizeSpectrum(spectrum_scaling_factor);
                 displayProgressBar((int)time_played);
-                DrawText(music_title, 112, (SCREEN_HEIGHT/2) + 64 - 12, 12, TEXT_COLOR);  
+
+                //----------------------------------------------------------------------------------
+                DrawTextEx(font, music_title, text_pos, (float) font_size, 0.0, TEXT_COLOR);
             }
             DrawTextureRec(spritesheet, framerec, sprite_pos, WHITE); 
         EndDrawing();
