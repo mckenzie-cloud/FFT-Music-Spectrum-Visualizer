@@ -118,13 +118,13 @@ void RMS_TO_DBFS(float spectrum[], float n_freq[], float dt, float smoothingFact
     {
         /* code */
         float rms = sqrtf(spectrum[i]/n_freq[i]);        // Calculate the RMS value.
+        float dBFS = 0.0;
         if (rms > 0.0)
         {
-            float dBFS = 10.0*log10f(rms);               // Convert RMS value to Decibel Full Scale (dBFS) value.
+            dBFS = 10.0*log10f(rms);               // Convert RMS value to Decibel Full Scale (dBFS) value.
             if (dBFS < 0.0) { dBFS = 0.0; }
-            spectrum[i] = fabsf(dBFS);
         }
-        data.smooth_spectrum[i] += (spectrum[i] - data.smooth_spectrum[i]) * dt * smoothingFactor;    // Smoothing the spectrum output value.
+        data.smooth_spectrum[i] += (dBFS - data.smooth_spectrum[i]) * dt * smoothingFactor;    // Smoothing the spectrum output value.
     }
 }
 
