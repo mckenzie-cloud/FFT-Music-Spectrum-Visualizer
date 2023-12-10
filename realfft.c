@@ -67,6 +67,6 @@ void realft(float data[], size_t n, const int isign)
     } else {
         data[0] = c1*((h1r=data[0])+data[1]);
         data[1] = c1*(h1r-data[1]);
-        four1(data, n, -1);
+        four1(data, n>>1, -1);
     }
 }
